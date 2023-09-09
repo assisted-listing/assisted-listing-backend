@@ -24,6 +24,8 @@ def lambda_handler(event, context):
 
     try:
         body = json.loads(event['body'])
+        logging.info('Body:')
+
         logging.info(body)
         logging.info('&'*100)
     except:

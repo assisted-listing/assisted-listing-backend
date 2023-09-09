@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         pass
     statusCode = 200
     if path == 'subscription_change':
-        result = 'subscriptui'
+        result = 'subscription'
     elif path == 'new_user':
         result = 'new_user'
     else:

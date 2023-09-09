@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     if path == 'subscription_change':
         result = 'subscription'
     elif path == 'new_user':
-        result = 'new_user'
+        result = 'new_users'
     else:
         statusCode = 503
         logging.error('{path} is not a valid endpoint')

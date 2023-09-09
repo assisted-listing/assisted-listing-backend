@@ -1,4 +1,6 @@
 import json
+import logging
+from subscriptions import *
 
 def lambda_handler(event, context):
     #TODO set log level here from environment variable
@@ -32,7 +34,7 @@ def lambda_handler(event, context):
         pass
     statusCode = 200
     if path == 'subscription_change':
-        result = 'subscription'
+        handle_subscription(body, event.headers)
     elif path == 'new_user':
         result = 'new_users'
     else:

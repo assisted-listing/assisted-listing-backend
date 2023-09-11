@@ -1,15 +1,19 @@
 import stripe
 import os
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 stripe.api_key = os.environ['stripe_key_test']
-endpoint_secret = os.environ['webhook_secret']
+endpoint_secret = os.environ['webhook_secret_test']
 
 
 
-def handle_subscription(data, headers):
-    event = None
+def handle_subscription(data, event):
     payload = data
-    sig_header = headers['STRIPE_SIGNATURE']
+    headers = event['headers']
+    sig_header = headers['Stripe-Signature']
 
     try:
         event = stripe.Webhook.construct_event(
@@ -17,38 +21,38 @@ def handle_subscription(data, headers):
         )
     except ValueError as e:
         # Invalid payload
-        raise e
+        logging.error(e)
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
-        raise e
+        logging.error(e)
 
     # Handle the event
-    if event['type'] == 'checkout.session.async_payment_succeeded':
-      session = event['data']['object']
+    if data['type'] == 'checkout.session.async_payment_succeeded':
+      session = data['data']['object']
       return session
-    elif event['type'] == 'checkout.session.completed':
-      session = event['data']['object']
+    elif data['type'] == 'checkout.session.completed':
+      session = data['data']['object']
       return session
-    elif event['type'] == 'subscription_schedule.aborted':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.canceled':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.completed':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.created':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.expiring':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.released':
-      subscription_schedule = event['data']['object']
-      return session
-    elif event['type'] == 'subscription_schedule.updated':
-      subscription_schedule = event['data']['object']
-      return session
+    elif data['type'] == 'subscription_schedule.aborted':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.canceled':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.completed':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.created':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.expiring':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.released':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
+    elif data['type'] == 'subscription_schedule.updated':
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
     else:
-      print('Unhandled event type {}'.format(event['type']))
+      print('Unhandled event type {}'.format(data['type']))

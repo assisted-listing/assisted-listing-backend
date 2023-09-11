@@ -1,12 +1,13 @@
 import json
 import logging
 from subscriptions import *
+from database import *
 
 def lambda_handler(event, context):
     #TODO set log level here from environment variable
     
     logging.info('*'*100)
-    logging.info(event)
+    logging.error(event)
     logging.info('!'*100)
     logging.info(context)
     logging.info('@'*100)
@@ -25,16 +26,25 @@ def lambda_handler(event, context):
     # }
 
     try:
+        method = event['httpMethod']
         body = json.loads(event['body'])
         logging.info('Body:')
 
         logging.info(body)
         logging.info('&'*100)
     except:
-        pass
+        body = {}
+        
     statusCode = 200
+    if path == 'checkout':
+        if method == 'GET':
+            params = event['queryStringParameters']
+            result = get_checkout(params['checkoutID'])
+        if method == 'POST':
+            result = create_checkout(body['user'])
+            
     if path == 'subscription_change':
-        handle_subscription(body, event.headers)
+        result = handle_subscription(body, event)
     elif path == 'new_user':
         result = 'new_users'
     else:

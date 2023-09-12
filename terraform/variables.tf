@@ -52,6 +52,15 @@ variable "bucketName" {
 
 }
 
+variable "dir_name" {
+  description = "Zip for lambda layer bucket"
+  type        = string
+  default     = "lambda-layer"
+
+
+}
+
+
 variable "runTime" {
   description = "Lambda Runtime for api function"
   type        = string

@@ -37,13 +37,14 @@ def lambda_handler(event, context):
         
     statusCode = 200
     if path == 'checkout':
-        if method == 'GET':
-            params = event['queryStringParameters']
-            result = get_checkout(params['checkoutID'])
+        
         if method == 'POST':
             result = create_checkout(body['user'])
+        else: #GET
+            params = event['queryStringParameters']
+            result = get_checkout(params['checkoutID'])
             
-    if path == 'subscription_change':
+    elif path == 'subscription_change':
         result = handle_subscription(body, event)
     elif path == 'new_user':
         result = 'new_users'

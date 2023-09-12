@@ -1,7 +1,7 @@
 data "archive_file" "api_code_archive" {
   type        = "zip"
-  source_dir = "${path.root}/../${var.sourceFolder}/"
-  output_path = "${path.root}/../${var.zipFile}"
+  source_dir = "../${var.sourceFolder}/"
+  output_path = "../${var.zipFile}"
 }
 
 resource "aws_s3_bucket" "api_bucket" {
@@ -49,20 +49,51 @@ resource "aws_s3_bucket" "database_bucket" {
   }, var.tags)
 }
 
-resource "aws_s3_bucket_versioning" "database_bucket" {
-  bucket = aws_s3_bucket.database_bucket.id
-  versioning_configuration {
-    status = "Enabled"
-  }
+resource "aws_s3_bucket" "lambda_layer_bucket" {
+  bucket        = "${var.name_prefix}-lambda-layer-bucket"
+  force_destroy = true
+
+  tags = merge({
+    Name = "${var.name_prefix}-lambda-layer-bucket"
+  }, var.tags)
 }
 
-resource "aws_s3_bucket_public_access_block" "database_bucket" {
-  bucket = aws_s3_bucket.database_bucket.id
+locals {
+  layer_zip_path    = "layer.zip"
+  layer_name        = "perl_api_lambda_layer"
+  requirements_path = "../requirements.txt"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+}
+
+# create zip file from requirements.txt. Triggers only when the file is updated
+resource "null_resource" "lambda_layer" {
+  triggers = {
+    requirements = filesha1(local.requirements_path)
+  }
+  # the command to install python and dependencies to the machine and zips
+  provisioner "local-exec" {
+    command = "build_layer.bat ${var.dir_name} ${var.runTime} ${var.name_prefix} ${local.requirements_path} ${local.layer_zip_path}"
+    }
+}
+
+
+
+# upload zip file to s3
+resource "aws_s3_object" "lambda_layer_zip" {
+  bucket     = aws_s3_bucket.lambda_layer_bucket.id
+  key        = "lambda_layers/${local.layer_name}/${local.layer_zip_path}"
+  source     = local.layer_zip_path
+  depends_on = [null_resource.lambda_layer] # triggered only if the zip file is created
+}
+
+# create lambda layer from s3 object
+resource "aws_lambda_layer_version" "api_lambda_layer" {
+  s3_bucket           = aws_s3_bucket.lambda_layer_bucket.id
+  s3_key              = aws_s3_object.lambda_layer_zip.key
+  layer_name          = local.layer_name
+  compatible_runtimes = ["${var.runTime}"]
+  skip_destroy        = true
+  depends_on          = [aws_s3_object.lambda_layer_zip] # triggered only if the zip file is uploaded to the bucket
 }
 
 resource "aws_lambda_function" "api_lambda" {
@@ -77,6 +108,7 @@ resource "aws_lambda_function" "api_lambda" {
   memory_size      = 512
   publish          = true
   timeout = 20
+  layers = [aws_lambda_layer_version.api_lambda_layer.arn]
 
 
   lifecycle {
@@ -93,6 +125,7 @@ resource "aws_lambda_function" "api_lambda" {
     variables = {
       ENV = "PROD"
       LOG_LEVEL = "DEBUG"
+      
     }
   }
 
@@ -134,7 +167,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-          "s3:*"
+          "s3:*",
+          "dynamodb:*"
         ],
         Resource = "*"
       }
@@ -165,9 +199,9 @@ resource "aws_apigatewayv2_api" "api_gateway" {
   name          = "${var.name_prefix}-api-gateway"
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = ["http://localhost:4200", "https://www.assisted-listing.com"]
+    allow_origins = ["http://*","https://*"]
     allow_methods = ["POST", "GET", "OPTIONS"]
-    allow_headers = ["content-type"]
+    allow_headers = ["*"]
     max_age = 300
   }
   tags = merge({
@@ -217,9 +251,18 @@ resource "aws_apigatewayv2_integration" "api_gateway_integration" {
   request_templates  = {}
 }
 
+
 resource "aws_apigatewayv2_route" "api_gateway_any_route" {
   api_id               = aws_apigatewayv2_api.api_gateway.id
   route_key            = "ANY /{proxy+}"
+  target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
+  authorization_scopes = []
+  request_models       = {}
+}
+
+resource "aws_apigatewayv2_route" "get_checkout" {
+  api_id               = aws_apigatewayv2_api.api_gateway.id
+  route_key            = "GET /checkout"
   target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
   authorization_scopes = []
   request_models       = {}

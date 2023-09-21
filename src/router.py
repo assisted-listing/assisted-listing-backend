@@ -13,18 +13,6 @@ def lambda_handler(event, context):
     logging.info('@'*100)
     path = event['path'][1:]
 
-    # try:
-    #     user = event["queryStringParameters"]["user"]
-    # except:
-    #     statusCode = 503
-    #     logging.error('must include user in API request like /user?testUser0')
-
-    #     result = f'must include user in API request like /user?testUser0'
-    #     return { 
-    #     'statusCode': statusCode,
-    #     'body': json.dumps(result)
-    # }
-
     try:
         method = event['httpMethod']
         body = json.loads(event['body'])
@@ -39,15 +27,15 @@ def lambda_handler(event, context):
     if path == 'checkout':
         
         if method == 'POST':
-            result = create_checkout(body['user'])
+            result = create_listing(body['user'], body['prompt'])
         else: #GET
             params = event['queryStringParameters']
             result = get_checkout(params['checkoutID'])
             
     elif path == 'subscription_change':
         result = handle_subscription(body, event)
-    elif path == 'new_user':
-        result = 'new_users'
+    elif path == 'user':
+        result = create_user(body['email'], body['subID'])
     else:
         statusCode = 503
         logging.error('{path} is not a valid endpoint')

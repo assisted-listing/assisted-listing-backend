@@ -107,10 +107,16 @@ def get_checkout(id, dynamodb_client=None):
     table = dynamodb_client.Table('assissted-listing-checkout')
     response = table.get_item(
         Key={
-            'checkoutID': id
+            'checkoutID': int(id)
         }
     )
-    return response['Item']
+
+    response['Item']['checkoutID'] = int(response['Item']['checkoutID'])
+    try:
+        return response['Item']
+    except:
+        #TODO Error handling
+        return {'checkoutID': int(id)}
 
 
 

@@ -6,6 +6,12 @@ from database import *
 def lambda_handler(event, context):
     #TODO set log level here from environment variable
     
+    if event['httpMethod'] == 'OPTIONS':
+        return { 
+        'statusCode': 200,
+        'body': json.dumps("Successful preflight")
+    }
+    
     logging.info('*'*100)
     logging.error(event)
     logging.info('!'*100)
@@ -27,8 +33,8 @@ def lambda_handler(event, context):
     if path == 'checkout':
         
         if method == 'POST':
-            result = create_listing(body['user'], body['prompt'])
-        else: #GET
+            result = create_listing(body['body']['user'], body['body']['prompt'])
+        elif method == 'GET': #GET
             params = event['queryStringParameters']
             result = get_checkout(params['checkoutID'])
             

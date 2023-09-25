@@ -268,6 +268,30 @@ resource "aws_apigatewayv2_route" "get_checkout" {
   request_models       = {}
 }
 
+resource "aws_apigatewayv2_route" "post_checkout" {
+  api_id               = aws_apigatewayv2_api.api_gateway.id
+  route_key            = "POST /checkout"
+  target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
+  authorization_scopes = []
+  request_models       = {}
+}
+
+resource "aws_apigatewayv2_route" "post_user" {
+  api_id               = aws_apigatewayv2_api.api_gateway.id
+  route_key            = "POST /user"
+  target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
+  authorization_scopes = []
+  request_models       = {}
+}
+
+resource "aws_apigatewayv2_route" "get_user" {
+  api_id               = aws_apigatewayv2_api.api_gateway.id
+  route_key            = "GET /user"
+  target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
+  authorization_scopes = []
+  request_models       = {}
+}
+
 resource "aws_apigatewayv2_route" "subscription_change" {
   api_id               = aws_apigatewayv2_api.api_gateway.id
   route_key            = "POST /subscription_change"

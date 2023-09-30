@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         if method == 'POST':
             result = create_user(body['email'], body['subID'])
         if method == 'GET':
-            result = get_user(body['email'])
+            result = get_user(params['userID'])
     else:
         statusCode = 503
         logging.error('{path} is not a valid endpoint')

@@ -24,7 +24,7 @@ Welcome home to this remarkable 2200sqft condo, where sustainable living meets m
 
 def create_listing(user, prompt):
     print('##############Generating Listing on OpenAI######################')
-    listing = x#generate_ai_listing(prompt)
+    listing = generate_ai_listing(prompt)
     print(listing)
 
     dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
@@ -40,6 +40,9 @@ def create_listing(user, prompt):
         print('##############Updating Remaining monthly Calls######################')
 
         decrement_subscription(user, dynamodb_client=dynamodb_client)
+        
+    res['checkoutID'] = int(res['checkoutID'])
+
 
     return res
 
@@ -198,7 +201,7 @@ def decrement_subscription(email, dynamodb_client=None):
 def create_user(email, userID):
     dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
 
-    table = dynamodb_client.Table('assissted-listing-user')
+    table = dynamodb_client.Table('assisted-listing-user')
 
     res = table.put_item(Item={
             'email':email,

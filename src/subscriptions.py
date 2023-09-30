@@ -3,6 +3,9 @@ import os
 import logging
 import boto3
 from database import *
+from requests import *
+from requests.auth import HTTPBasicAuth
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -33,15 +36,14 @@ def handle_subscription(data, event):
     if data['type'] == 'checkout.session.async_payment_succeeded':
       session = data['data']['object']
       return session
-    elif data['type'] == 'customer.subscription.created':
+    elif data['type'] == 'checkout.session.completed':
       session = data['data']['object']
       subscriptionID = session['subscription']
-      email = session['email']
+      email = session['customer_email']
       customer_creation = session['customer_creation']
       customerID = session['customer']
       payment_status = session['payment_status']
-      product = session['product']
-      planType, listingPerMonth = subscriptionProductMap(product)
+      planType, listingPerMonth = subscriptionPlanAttributes(subscriptionID)
 
       subscription_created(email, subscriptionID, customerID, planType, listingPerMonth)
 
@@ -70,12 +72,22 @@ def handle_subscription(data, event):
     else:
       print('Unhandled event type {}'.format(data['type']))
 
-def subscriptionProductMap(product):
+def subscriptionPlanAttributes(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
+  res = get_subscripton_data(sub_id)
+  product = res['product']
   if 'prod_OaamIqqtpyycqc': 
      return 'Basic', 12
   else:
      return 'Basic', 12
+  
+def get_subscripton_data(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
+  auth = HTTPBasicAuth(os.environ['stripe_key_test'], '')
+  res: requests.Response = requests.get(f'https://api.stripe.com/v1/subscriptions/{sub_id}', auth=auth)
+  return res.json()
 
+def update_purchase(user, subscription):
+   pass
+   
 
 def new_subscription(email, customerID, subscriptionID):
    pass

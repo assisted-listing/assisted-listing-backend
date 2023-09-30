@@ -6,21 +6,45 @@ from database import *
 def lambda_handler(event, context):
     #TODO set log level here from environment variable
     
-    if event['httpMethod'] == 'OPTIONS':
-        return { 
-        'statusCode': 200,
-        'body': json.dumps("Successful preflight")
-    }
+   
     
     logging.info('*'*100)
     logging.error(event)
     logging.info('!'*100)
     logging.info(context)
     logging.info('@'*100)
-    path = event['path'][1:]
+    
+    
+    try:
+        logging.error(event['triggerSource'])
+
+        if event['triggerSource']== 'PostConfirmation_ConfirmSignUp':
+            email = event['request']['userAttributes']['email']
+            sub = event['request']['userAttributes']['sub']
+            result = create_user(email, sub)
+            logging.info('RESULT:')
+            logging.info(result)
+            return { 
+                'statusCode': 200,
+                'body': json.dumps(result)
+            }
+    except Exception as error:
+        logging.error('error: ')
+        logging.error(error)
+            
+    
 
     try:
         method = event['httpMethod']
+        if method == 'OPTIONS':
+            return { 
+            'statusCode': 200,
+            'body': json.dumps("Successful preflight")
+        }
+    except:
+        pass
+    
+    try:
         body = json.loads(event['body'])
         logging.info('Body:')
 
@@ -29,6 +53,8 @@ def lambda_handler(event, context):
     except:
         body = {}
         
+     
+    path = event['path'][1:]    
     statusCode = 200
     if path == 'checkout':
         

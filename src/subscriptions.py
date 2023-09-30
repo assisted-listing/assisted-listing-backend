@@ -74,8 +74,9 @@ def handle_subscription(data, event):
 
 def subscriptionPlanAttributes(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
   res = get_subscripton_data(sub_id)
-  product = res['product']
-  if 'prod_OaamIqqtpyycqc': 
+  logging.error(res)
+  product = res['plan']['product']
+  if product == 'prod_OaamIqqtpyycqc': 
      return 'Basic', 12
   else:
      return 'Basic', 12
@@ -83,11 +84,7 @@ def subscriptionPlanAttributes(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
 def get_subscripton_data(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
   auth = HTTPBasicAuth(os.environ['stripe_key_test'], '')
   res: requests.Response = requests.get(f'https://api.stripe.com/v1/subscriptions/{sub_id}', auth=auth)
-  return res.json()
-
-def update_purchase(user, subscription):
-   pass
-   
+  return res.json()   
 
 def new_subscription(email, customerID, subscriptionID):
    pass

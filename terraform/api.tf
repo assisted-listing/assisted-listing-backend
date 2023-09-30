@@ -200,7 +200,7 @@ resource "aws_apigatewayv2_api" "api_gateway" {
   protocol_type = "HTTP"
   cors_configuration {
     allow_origins = ["http://*","https://*"]
-    allow_methods = ["POST", "GET", "OPTIONS"]
+    allow_methods = ["POST", "GET", "OPTIONS", "PUT"]
     allow_headers = ["*"]
     max_age = 300
   }
@@ -271,6 +271,14 @@ resource "aws_apigatewayv2_route" "get_checkout" {
 resource "aws_apigatewayv2_route" "post_checkout" {
   api_id               = aws_apigatewayv2_api.api_gateway.id
   route_key            = "POST /checkout"
+  target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
+  authorization_scopes = []
+  request_models       = {}
+}
+
+resource "aws_apigatewayv2_route" "update_checkout" {
+  api_id               = aws_apigatewayv2_api.api_gateway.id
+  route_key            = "PUT /checkout"
   target               = "integrations/${aws_apigatewayv2_integration.api_gateway_integration.id}"
   authorization_scopes = []
   request_models       = {}

@@ -63,6 +63,9 @@ def lambda_handler(event, context):
         elif method == 'GET': #GET
             params = event['queryStringParameters']
             result = get_checkout(params['checkoutID'])
+        elif method == 'PUT':
+            params = event['queryStringParameters']
+            result = purchase_listing_with_subscription(params['checkoutID'])
             
     elif path == 'subscription_change':
         result = handle_subscription(body, event)

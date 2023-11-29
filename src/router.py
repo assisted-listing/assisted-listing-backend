@@ -63,9 +63,9 @@ def lambda_handler(event, context):
         elif method == 'GET': #GET
             params = event['queryStringParameters']
             result = get_checkout(params['checkoutID'])
-        elif method == 'PUT':
+        else:
             params = event['queryStringParameters']
-            result = purchase_listing_with_subscription(params['checkoutID'])
+            result = purchase_listing_with_subscription(body['body']['email'], body['body']['checkoutID'])
             
     elif path == 'subscription_change':
         result = handle_subscription(body, event)
@@ -73,6 +73,7 @@ def lambda_handler(event, context):
         if method == 'POST':
             result = create_user(body['email'], body['subID'])
         if method == 'GET':
+            params = event['queryStringParameters']
             result = get_user(params['userID'])
     else:
         statusCode = 503

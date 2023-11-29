@@ -9,10 +9,13 @@ def create_listing(user, prompt):
     print(listing)
 
     dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
-    print('##############Fetching User Details######################')
+    isSubscribed = False
 
-    sub = get_user(user,dynamodb_client=dynamodb_client)
-    isSubscribed = sub['subscriptionType'] in ['Basic'] and sub['listingsRemaining'] > 0    
+    if not user == '':
+        print('##############Fetching User Details######################')
+    
+        sub = get_user(user,dynamodb_client=dynamodb_client)
+        isSubscribed = sub['subscriptionType'] in ['Basic'] and sub['listingsRemaining'] > 0    
 
     print('##############Creating new Checkout object in Dynamo######################')
     res= create_checkout(user, listing, isSubscribed, dynamodb_client=dynamodb_client)
@@ -103,7 +106,7 @@ def get_checkout(id, dynamodb_client=None):
         #TODO Error handling
         return {'checkoutID': int(id)}
     
-def purchase_checkout(checkoutID, dynamodb_client=None):
+def purchase_checkout(checkoutID, email, dynamodb_client=None):
     print(checkoutID)
     if dynamodb_client is None:
         dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
@@ -114,11 +117,13 @@ def purchase_checkout(checkoutID, dynamodb_client=None):
             'checkoutID': int(checkoutID)
         },
         UpdateExpression='''SET 
+    userID = :email,
     paid = :paid,
     paidTS = :paidTS
     
     ''',
         ExpressionAttributeValues={
+            ':email': email,
             ':paid': True,
             ':paidTS': datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S:%f')
               }
@@ -162,13 +167,17 @@ def get_user(email,dynamodb_client=None):
     if dynamodb_client is None:
         dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
 
-    table = dynamodb_client.Table('assisted-listing-user')
-    response = table.get_item(Key={
-            'email': email
-        })
-    
-    print(response)
-    return(response['Item'])
+    try: 
+        table = dynamodb_client.Table('assisted-listing-user')
+        response = table.get_item(Key={
+                'email': email
+            })
+        
+        print(response)
+        response['Item']['listingsRemaining'] = int(response['Item']['listingsRemaining'])
+        return(response['Item'])
+    except:
+        return {'email': None}
 
 def decrement_subscription(email, dynamodb_client=None):
     if dynamodb_client is None:
@@ -208,12 +217,11 @@ def create_user(email, userID):
     
     return res
 
-def purchase_listing_with_subscription(checkoutID):
+def purchase_listing_with_subscription(email, checkoutID):
     dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
 
     print('################Purchasing Listing with subscription######################')
     checkout = get_checkout(checkoutID, dynamodb_client)
-    email = checkout['userID']
     print(f'###########Retrieved checkout {checkoutID} by {email}################')
 
 
@@ -222,19 +230,15 @@ def purchase_listing_with_subscription(checkoutID):
 
 
     if int(user['listingsRemaining']) > 0:
-        purchase_checkout(checkoutID)
+        purchase_checkout(checkoutID, email, dynamodb_client)
         print('Checkout is purchased')
         decrement_subscription(email, dynamodb_client)
         print('Decrement remaining subscriptions')
-        return user
     else:
         #TODO error handling
         print('User does not have any listing remaining for this month')
-        return user
 
-
-purchase_listing_with_subscription(1194073)
-
+        return get_checkout(checkoutID,dynamodb_client)
 
 
 #subscription_created('mikea0009@gmail.com', 'sub_1NpP8lAtI9Pqdjf0GcNKSrYV', 'cus_OceR8SWpK9lnY7', 'Basic', 12)

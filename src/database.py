@@ -238,7 +238,7 @@ def purchase_listing_with_subscription(email, checkoutID):
         #TODO error handling
         print('User does not have any listing remaining for this month')
 
-        return get_checkout(checkoutID,dynamodb_client)
+    return get_checkout(checkoutID,dynamodb_client)
 
 
 #subscription_created('mikea0009@gmail.com', 'sub_1NpP8lAtI9Pqdjf0GcNKSrYV', 'cus_OceR8SWpK9lnY7', 'Basic', 12)

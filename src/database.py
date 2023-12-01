@@ -3,9 +3,9 @@ from openAI import *
 from random import randint
 import datetime
 
-def create_listing(user, prompt):
+def create_listing(user, prompt, listing):
     print('##############Generating Listing on OpenAI######################')
-    listing = generate_ai_listing(prompt)
+    #listing = generate_ai_listing(prompt)
     print(listing)
 
     dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")

@@ -105,7 +105,7 @@ resource "aws_lambda_function" "api_lambda" {
   architectures    = ["arm64"]
   runtime          = "${var.runTime}"
   handler          = "${var.sourceFile}.${var.handler}"
-  memory_size      = 512
+  memory_size      = 1024
   publish          = true
   timeout = 20
   layers = [aws_lambda_layer_version.api_lambda_layer.arn]

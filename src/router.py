@@ -9,14 +9,14 @@ def lambda_handler(event, context):
    
     
     logging.info('*'*100)
-    logging.error(event)
+    logging.info(event)
     logging.info('!'*100)
     logging.info(context)
     logging.info('@'*100)
     
     
     try:
-        logging.error(event['triggerSource'])
+        logging.info(event['triggerSource'])
 
         if event['triggerSource']== 'PostConfirmation_ConfirmSignUp':
             email = event['request']['userAttributes']['email']
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
     if path == 'checkout':
         
         if method == 'POST':
-            result = create_listing(body['body']['user'], body['body']['prompt'])
+            result = create_listing(body['body']['user'], body['body']['prompt'], body['body']['listing'])
         elif method == 'GET': #GET
             params = event['queryStringParameters']
             result = get_checkout(params['checkoutID'])

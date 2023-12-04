@@ -106,6 +106,33 @@ def get_checkout(id, dynamodb_client=None):
         #TODO Error handling
         return {'checkoutID': int(id)}
     
+def get_checkouts_for_user(userID: str, dynamodb_client=None):
+    if dynamodb_client is None:
+        dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
+
+    table=dynamodb_client.Table('assissted-listing-checkout')
+    
+    response = table.scan(
+        FilterExpression=f'#userID = :value',
+        ExpressionAttributeNames={
+            '#userID': 'userID'
+        },
+        ExpressionAttributeValues={
+            ':value': userID
+        }
+    )
+
+    
+    try:
+        for item in  response['Items']:
+            item['checkoutID'] = int(item['checkoutID'])
+
+        return response['Items']
+    except:
+        #TODO Error handling
+        return {'User': userID}
+
+    
 def purchase_checkout(checkoutID, email, dynamodb_client=None):
     print(checkoutID)
     if dynamodb_client is None:
@@ -247,3 +274,4 @@ def purchase_listing_with_subscription(email, checkoutID):
 
 
 
+print(get_checkouts_for_user('mikea0009@gmail.com'))

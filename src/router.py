@@ -66,7 +66,10 @@ def lambda_handler(event, context):
         else:
             params = event['queryStringParameters']
             result = purchase_listing_with_subscription(body['body']['email'], body['body']['checkoutID'])
-            
+    elif path == 'checkout/user':
+        params = event['queryStringParameters']
+
+        result = get_checkouts_for_user(params['userID'])        
     elif path == 'subscription_change':
         result = handle_subscription(body, event)
     elif path == 'user':

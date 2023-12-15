@@ -2,6 +2,7 @@ import boto3
 from openAI import *
 from random import randint
 import datetime
+import constants
 
 def create_listing(user, prompt, listing):
     print('##############Generating Listing on OpenAI######################')
@@ -221,6 +222,32 @@ def decrement_subscription(email, dynamodb_client=None):
     ''',
      ExpressionAttributeValues={
         ':val': -1
+    },
+    )
+    print(response)
+    return response
+
+def apply_subscription(email, subscriptionID, planID, listings, dynamodb_client=None):
+    if dynamodb_client is None:
+        dynamodb_client = boto3.resource('dynamodb', region_name="us-east-1")
+
+    table = dynamodb_client.Table('assisted-listing-user')
+    response = table.update_item(
+        Key={
+            'email': email
+        },
+        UpdateExpression='''SET 
+    subscribedFlag = :subscribed,
+    subscriptionID = :subscriptionID,
+    subscriptionType = :planType,
+    listingsRemaining = :listingRemaining
+    
+    ''',
+     ExpressionAttributeValues={
+        ':subscribed': True,
+            ':subscriptionID': subscriptionID,
+            ':planType': planID,
+            ':listingRemaining': listings
     },
     )
     print(response)

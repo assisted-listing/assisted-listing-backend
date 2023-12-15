@@ -48,6 +48,19 @@ def handle_subscription(data, event):
       subscription_created(email, subscriptionID, customerID, planType, listingPerMonth)
 
       return f'Subscription created succesfully for {email}'
+    elif data['type'] == 'invoice.paid':
+      session = data['data']['object']
+
+      
+      if session['billing_reason'] == 'subscription_update':
+        email = session['customer_email']
+        subscriptionID = session['subscription']
+        plan = session['lines']['data'][0]['price']['id']
+        planName, listings = constants.DEV[plan]['ID'], constants.DEV[plan]['listings']
+        apply_subscription(email, subscriptionID, planName, listings)
+      
+      subscription_schedule = data['data']['object']
+      return subscription_schedule
     elif data['type'] == 'subscription_schedule.aborted':
       subscription_schedule = data['data']['object']
       return subscription_schedule
@@ -72,8 +85,9 @@ def handle_subscription(data, event):
     else:
       print('Unhandled event type {}'.format(data['type']))
 
-def subscriptionPlanAttributes(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
+def subscriptionPlanAttributes(sub_id = 'sub_1OJgAQAtI9Pqdjf0QEBweojp'):
   res = get_subscripton_data(sub_id)
+  print(res)
   logging.info(res)
 
   product = res['plan']['product']
@@ -82,14 +96,11 @@ def subscriptionPlanAttributes(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
   else:
      return 'Basic', 12
   
-def get_subscripton_data(sub_id = 'sub_1Nu7S2AtI9Pqdjf02K7b11Je'):
+def get_subscripton_data(sub_id = 'sub_1OJgAQAtI9Pqdjf0QEBweojp'):
   auth = HTTPBasicAuth(os.environ['stripe_key_test'], '')
   res: requests.Response = requests.get(f'https://api.stripe.com/v1/subscriptions/{sub_id}', auth=auth)
-  return res.json()
-
-def update_purchase(user, subscription):
-   pass
-   
+  print(res.content)
+  return res.json()   
 
 def new_subscription(email, customerID, subscriptionID):
    pass
@@ -102,3 +113,8 @@ def new_subscription(email, customerID, subscriptionID):
 
 def cancel_subscription(sub_id):
    pass
+
+with open('jsons/upgraded.invoice.paid.json', 'r') as file:
+    # Load the JSON data from the file into a dictionary
+    data = json.load(file)
+    handle_subscription(data, 'a')
